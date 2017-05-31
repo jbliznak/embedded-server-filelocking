@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.jboss.qa</groupId>
+    <artifactId>embedded-server-filelocking</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+
+        <version.wildfly.cli>3.0.0.Beta23</version.wildfly.cli>
+
+        <compiler.version>3.6.1</compiler.version>
+        <enforcer.version>1.4.1</enforcer.version>
+        <surefire.version>2.20</surefire.version>
+
+        <testLogToFile>false</testLogToFile>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-cli</artifactId>
+            <version>${version.wildfly.cli}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler.version}</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>${enforcer.version}</version>
+                <executions>
+                    <execution>
+                        <id>enforce-zip</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireProperty>
+                                    <property>wildfly.home</property>
+                                    <message>You must specify wildfly.home property with unzipped WildFly location.</message>
+                                </requireProperty>
+                                <requireProperty>
+                                    <property>handle.exe</property>
+                                    <message>You must specify handle.exe property with handle.exe location.</message>
+                                </requireProperty>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.version}</version>
+                <configuration>
+                    <!-- Permitt all to avoid security manager issues during client initialization -->
+                    <!-- Big enough heap so that no allocation failure GC occurs during tests -->
+                    <argLine>-Xms512m -Xmx512m -Djava.security.policy=${project.basedir}/permitt_all.policy -Djava.util.logging.manager=org.jboss.logmanager.LogManager</argLine>
+                    <failIfNoTests>false</failIfNoTests>
+                    <trimStackTrace>false</trimStackTrace>
+                    <!-- fork per testclass -->
+                    <reuseForks>false</reuseForks>
+                    <forkCount>1</forkCount>
+                    <runOrder>alphabetical</runOrder>
+
+                    <systemPropertyVariables>
+                        <wildfly.home>$wildfly.home</wildfly.home>
+                        <handle.exe>$handle.exe</handle.exe>
+                    </systemPropertyVariables>
+                    <redirectTestOutputToFile>${testLogToFile}</redirectTestOutputToFile>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>jboss-nexus-public</id>
+            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+</project>
